@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: mensa-angelini
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TZ
+        value: Europe/Rome
+      - key: ANTHROPIC_API_KEY
+        sync: false
