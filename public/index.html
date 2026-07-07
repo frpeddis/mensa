@@ -4,48 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Menu del Giorno – Mensa Angelini</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- Animated background blobs -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
   <header class="header">
-    <div class="header-icon">🥗</div>
-    <h1>Menu del Giorno</h1>
-    <div class="date" id="today-date"></div>
+    <div class="header-content">
+      <div class="header-top">
+        <div class="app-brand">
+          <div class="app-icon">🥗</div>
+          <div class="app-title-group">
+            <h1 class="app-title" data-i18n="appTitle">Menu del Giorno</h1>
+            <span class="app-subtitle" data-i18n="appSubtitle">Mensa Angelini</span>
+          </div>
+        </div>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="it">IT</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+      <div class="date-badge" id="today-date"></div>
+    </div>
   </header>
 
   <main>
     <div class="container" id="menu-container">
-      <!-- Skeleton loader (3 card di placeholder) -->
       <div class="skeleton-card" id="sk1">
-        <div class="skeleton-line long"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line medium skeleton-bar"></div>
+        <div class="sk-header">
+          <div class="sk-line long"></div>
+          <div class="sk-badge"></div>
+        </div>
+        <div class="sk-bar"></div>
+        <div class="sk-grid">
+          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
+        </div>
       </div>
       <div class="skeleton-card" id="sk2">
-        <div class="skeleton-line medium"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line long skeleton-bar"></div>
+        <div class="sk-header">
+          <div class="sk-line medium"></div>
+          <div class="sk-badge"></div>
+        </div>
+        <div class="sk-bar"></div>
+        <div class="sk-grid">
+          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
+        </div>
       </div>
       <div class="skeleton-card" id="sk3">
-        <div class="skeleton-line long"></div>
-        <div class="skeleton-line medium"></div>
-        <div class="skeleton-line short skeleton-bar"></div>
+        <div class="sk-header">
+          <div class="sk-line long"></div>
+          <div class="sk-badge"></div>
+        </div>
+        <div class="sk-bar"></div>
+        <div class="sk-grid">
+          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Error screen (nascosta di default) -->
     <div class="error-screen" id="error-screen">
-      <div class="error-icon">🌿</div>
-      <h2>Menu non disponibile</h2>
-      <p>Impossibile recuperare il menu di oggi. Riprova tra qualche minuto.</p>
-      <button class="retry-btn" onclick="loadMenu()">Riprova</button>
+      <div class="error-icon">☁️</div>
+      <h2 data-i18n="errorTitle">Menu non disponibile</h2>
+      <p data-i18n="errorText">Impossibile recuperare il menu di oggi. Riprova tra qualche minuto.</p>
+      <button class="retry-btn" data-i18n="retryBtn" onclick="loadMenu()">Riprova</button>
     </div>
   </main>
 
   <footer class="footer">
-    ⚠️ Valori nutrizionali stimati da AI per porzioni standard da ristorazione.<br>
-    Non sostituiscono una consulenza nutrizionale professionale.
+    <p class="footer-line" data-i18n="footerText">Valori stimati da AI per porzioni standard da ristorazione.</p>
+    <p class="footer-line footer-sub" data-i18n="footerSub">Non sostituiscono una consulenza nutrizionale professionale.</p>
   </footer>
 
   <script src="app.js"></script>
