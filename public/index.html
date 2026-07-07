@@ -35,37 +35,30 @@
   </header>
 
   <main>
-    <!-- Top totals bar (slides down when dishes selected) -->
-    <div class="totals-wrap">
-      <div class="totals-bar totals-top" id="totals-top">
-        <div class="totals-inner">
-          <div class="totals-left">
-            <div class="count-badge" id="ttop-count">0</div>
-            <span class="count-label" id="ttop-label" data-i18n="piatti">piatti sel.</span>
-          </div>
-          <div class="totals-macros">
-            <div class="tval tval-cal">
-              <span class="tval-icon">🔥</span>
-              <span class="tval-n" id="ttop-cal">0</span>
-              <span class="tval-u" data-i18n="kcal">kcal</span>
-            </div>
-            <div class="tval tval-carb">
-              <span class="tval-icon">🌾</span>
-              <span class="tval-n" id="ttop-carb">0</span>
-              <span class="tval-u" data-i18n="gCarb">g carb</span>
-            </div>
-            <div class="tval tval-prot">
-              <span class="tval-icon">💪</span>
-              <span class="tval-n" id="ttop-prot">0</span>
-              <span class="tval-u" data-i18n="gProt">g prot</span>
-            </div>
-            <div class="tval tval-fat">
-              <span class="tval-icon">🫒</span>
-              <span class="tval-n" id="ttop-fat">0</span>
-              <span class="tval-u" data-i18n="gFat">g gras</span>
-            </div>
-          </div>
-        </div>
+
+    <!-- Sort bar (slides in after menu loads) -->
+    <div class="sort-wrap">
+      <div class="sort-bar" id="sort-bar">
+        <button class="sort-btn" data-key="calorie">
+          <span class="sort-icon">🔥</span>
+          <span class="sort-label" data-i18n="sortCal">Calorie</span>
+          <span class="sort-arrow"></span>
+        </button>
+        <button class="sort-btn" data-key="carboidrati_g">
+          <span class="sort-icon">🌾</span>
+          <span class="sort-label" data-i18n="sortCarb">Carb</span>
+          <span class="sort-arrow"></span>
+        </button>
+        <button class="sort-btn" data-key="proteine_g">
+          <span class="sort-icon">💪</span>
+          <span class="sort-label" data-i18n="sortProt">Prot</span>
+          <span class="sort-arrow"></span>
+        </button>
+        <button class="sort-btn" data-key="grassi_g">
+          <span class="sort-icon">🫒</span>
+          <span class="sort-label" data-i18n="sortFat">Grassi</span>
+          <span class="sort-arrow"></span>
+        </button>
       </div>
     </div>
 
@@ -94,6 +87,7 @@
       <p data-i18n="errorText">Impossibile recuperare il menu di oggi. Riprova tra qualche minuto.</p>
       <button class="retry-btn" data-i18n="retryBtn" onclick="loadMenu()">Riprova</button>
     </div>
+
   </main>
 
   <!-- Bottom totals bar (fixed) -->

@@ -14,6 +14,10 @@ const TRANSLATIONS = {
     fatIcon:    '🫒',
     piatto:     'piatto sel.',
     piatti:     'piatti sel.',
+    sortCal:    'Calorie',
+    sortCarb:   'Carb',
+    sortProt:   'Prot',
+    sortFat:    'Grassi',
     errorTitle: 'Menu non disponibile',
     errorText:  'Impossibile recuperare il menu di oggi. Riprova tra qualche minuto.',
     retryBtn:   'Riprova',
@@ -35,6 +39,10 @@ const TRANSLATIONS = {
     fatIcon:    '🫒',
     piatto:     'dish sel.',
     piatti:     'dishes sel.',
+    sortCal:    'Calories',
+    sortCarb:   'Carbs',
+    sortProt:   'Prot',
+    sortFat:    'Fat',
     errorTitle: 'Menu unavailable',
     errorText:  "Unable to load today's menu. Please try again in a few minutes.",
     retryBtn:   'Try again',
@@ -46,6 +54,7 @@ const TRANSLATIONS = {
 let currentLang = localStorage.getItem('lang') || 'it';
 let currentMenu = [];
 let selectedIndices = new Set();
+let currentSort = { key: null, dir: 'asc' }; // key: API field name | null
 
 function t(key) { return TRANSLATIONS[currentLang][key] ?? TRANSLATIONS.it[key] ?? key; }
 
@@ -74,7 +83,6 @@ function updateDate() {
 
 // ── Animations ───────────────────────────────────────────────────────────────
 
-// Slow entrance counter (card load)
 function animateNumber(el, target, duration = 950) {
   const start = performance.now();
   function tick(now) {
@@ -86,7 +94,6 @@ function animateNumber(el, target, duration = 950) {
   requestAnimationFrame(tick);
 }
 
-// Fast smooth counter (totals update)
 function animateTo(el, newVal, duration = 240) {
   const oldVal = parseInt(el.textContent) || 0;
   if (oldVal === newVal) return;
@@ -112,13 +119,8 @@ function popBadge(id) {
 function animateMacroBar(card, carb, prot, fat) {
   const total = (carb + prot + fat) || 1;
   setTimeout(() => {
-    const s = (sel, v) => {
-      const e = card.querySelector(sel);
-      if (e) e.style.width = `${(v / total * 100).toFixed(1)}%`;
-    };
-    s('.seg-carb', carb);
-    s('.seg-prot', prot);
-    s('.seg-fat',  fat);
+    const s = (sel, v) => { const e = card.querySelector(sel); if (e) e.style.width = `${(v/total*100).toFixed(1)}%`; };
+    s('.seg-carb', carb); s('.seg-prot', prot); s('.seg-fat', fat);
   }, 320);
 }
 
@@ -132,6 +134,62 @@ function ripple(card, e) {
   setTimeout(() => r.remove(), 750);
 }
 
+function btnRipple(btn, e) {
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'btn-ripple';
+  r.style.left = `${e.clientX - rect.left}px`;
+  r.style.top  = `${e.clientY - rect.top}px`;
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 550);
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+
+function getSortedOrder() {
+  const indices = currentMenu.map((_, i) => i);
+  if (!currentSort.key) return indices;
+  return indices.sort((a, b) => {
+    const va = Number(currentMenu[a][currentSort.key]) || 0;
+    const vb = Number(currentMenu[b][currentSort.key]) || 0;
+    return currentSort.dir === 'asc' ? va - vb : vb - va;
+  });
+}
+
+function updateSortButtons() {
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    const isActive = btn.dataset.key === currentSort.key;
+    btn.classList.toggle('active', isActive);
+    btn.dataset.dir = isActive ? currentSort.dir : '';
+    const arrow = btn.querySelector('.sort-arrow');
+    arrow.textContent = isActive ? (currentSort.dir === 'asc' ? '↑' : '↓') : '';
+  });
+}
+
+async function applySort() {
+  const container = document.getElementById('menu-container');
+  const existing = [...container.querySelectorAll('.card')];
+
+  // Quick cross-fade
+  existing.forEach(c => { c.style.transition = 'opacity .11s ease, transform .11s ease'; c.style.opacity = '0'; c.style.transform = 'scale(0.985)'; });
+  await new Promise(r => setTimeout(r, 125));
+
+  renderMenu(currentMenu, true);
+}
+
+function handleSortClick(btn, key, e) {
+  btnRipple(btn, e);
+  if (currentSort.key === key) {
+    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : null; // asc → desc → reset
+    if (currentSort.dir === null) { currentSort.key = null; currentSort.dir = 'asc'; }
+  } else {
+    currentSort.key = key;
+    currentSort.dir = 'asc';
+  }
+  updateSortButtons();
+  applySort();
+}
+
 // ── Selection & Totals ────────────────────────────────────────────────────────
 
 function safeNum(n) { return Math.max(0, Math.round(Number(n) || 0)); }
@@ -140,7 +198,6 @@ function updateTotals() {
   const count   = selectedIndices.size;
   const visible = count > 0;
 
-  document.getElementById('totals-top').classList.toggle('visible', visible);
   document.getElementById('totals-bottom').classList.toggle('visible', visible);
   document.body.classList.toggle('has-totals-bottom', visible);
 
@@ -156,36 +213,23 @@ function updateTotals() {
     tot.fat  += safeNum(item.grassi_g);
   });
 
-  ['cal', 'carb', 'prot', 'fat'].forEach(k => {
-    animateTo(document.getElementById(`ttop-${k}`), tot[k]);
-    animateTo(document.getElementById(`tbot-${k}`), tot[k]);
-  });
+  ['cal', 'carb', 'prot', 'fat'].forEach(k => animateTo(document.getElementById(`tbot-${k}`), tot[k]));
 
-  const topCount = document.getElementById('ttop-count');
   const botCount = document.getElementById('tbot-count');
-  if (topCount && topCount.textContent !== String(count)) {
-    topCount.textContent = count; popBadge('ttop-count');
-  }
   if (botCount && botCount.textContent !== String(count)) {
     botCount.textContent = count; popBadge('tbot-count');
   }
-
-  const label = count === 1 ? t('piatto') : t('piatti');
-  const tl = document.getElementById('ttop-label');
   const bl = document.getElementById('tbot-label');
-  if (tl) tl.textContent = label;
-  if (bl) bl.textContent = label;
+  if (bl) bl.textContent = count === 1 ? t('piatto') : t('piatti');
 }
 
 // ── Card rendering ────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderCard(item, index) {
+function renderCard(item, originalIndex) {
   const carb = safeNum(item.carboidrati_g);
   const prot = safeNum(item.proteine_g);
   const fat  = safeNum(item.grassi_g);
@@ -193,9 +237,7 @@ function renderCard(item, index) {
 
   const card = document.createElement('div');
   card.className = 'card';
-  card.style.animationDelay = `${index * 88}ms`;
-
-  if (selectedIndices.has(index)) card.classList.add('selected');
+  if (selectedIndices.has(originalIndex)) card.classList.add('selected');
 
   card.innerHTML = `
     <div class="card-check">
@@ -235,31 +277,47 @@ function renderCard(item, index) {
   return { card, cal, carb, prot, fat };
 }
 
-function renderMenu(data) {
+function renderMenu(data, isSortChange = false) {
   const container = document.getElementById('menu-container');
   container.querySelectorAll('.card').forEach(c => c.remove());
 
-  data.forEach((item, i) => {
-    const { card, cal, carb, prot, fat } = renderCard(item, i);
-    container.appendChild(card);
+  const order = getSortedOrder();
+
+  order.forEach((originalIndex, displayIndex) => {
+    const item = data[originalIndex];
+    const { card, cal, carb, prot, fat } = renderCard(item, originalIndex);
+
+    card.style.animationDelay = `${displayIndex * (isSortChange ? 38 : 88)}ms`;
 
     card.addEventListener('click', e => {
       ripple(card, e);
-      if (selectedIndices.has(i)) {
-        selectedIndices.delete(i);
+      if (selectedIndices.has(originalIndex)) {
+        selectedIndices.delete(originalIndex);
         card.classList.remove('selected');
       } else {
-        selectedIndices.add(i);
+        selectedIndices.add(originalIndex);
         card.classList.add('selected');
       }
       updateTotals();
     });
 
+    container.appendChild(card);
+
     requestAnimationFrame(() => {
-      card.classList.add('visible');
-      const calEl = card.querySelector('.cal-value');
-      setTimeout(() => animateNumber(calEl, cal), i * 88 + 180);
-      animateMacroBar(card, carb, prot, fat);
+      if (isSortChange) {
+        // Fast entrance; set values immediately (no re-animation)
+        card.querySelector('.cal-value').textContent = cal;
+        const total = (carb + prot + fat) || 1;
+        card.querySelector('.seg-carb').style.width = `${(carb/total*100).toFixed(1)}%`;
+        card.querySelector('.seg-prot').style.width = `${(prot/total*100).toFixed(1)}%`;
+        card.querySelector('.seg-fat' ).style.width = `${(fat /total*100).toFixed(1)}%`;
+        card.classList.add('sort-visible');
+      } else {
+        card.classList.add('visible');
+        const calEl = card.querySelector('.cal-value');
+        setTimeout(() => animateNumber(calEl, cal), displayIndex * 88 + 180);
+        animateMacroBar(card, carb, prot, fat);
+      }
     });
   });
 }
@@ -269,35 +327,33 @@ function renderMenu(data) {
 function showSkeletons() {
   ['sk1','sk2','sk3'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'block'; });
   document.getElementById('error-screen').classList.remove('visible');
+  document.getElementById('sort-bar').classList.remove('visible');
 }
 
 function hideSkeletons() {
   ['sk1','sk2','sk3'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
+  document.getElementById('sort-bar').classList.add('visible');
 }
 
-function showError() { document.getElementById('error-screen').classList.add('visible'); }
+function showError() {
+  document.getElementById('error-screen').classList.add('visible');
+}
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
 async function loadMenu() {
   const container = document.getElementById('menu-container');
-
-  // Fade out existing cards before replacing
   const existing = [...container.querySelectorAll('.card')];
   if (existing.length) {
-    existing.forEach(c => {
-      c.style.transition = 'opacity .18s ease, transform .18s ease';
-      c.style.opacity = '0';
-      c.style.transform = 'scale(0.96)';
-    });
+    existing.forEach(c => { c.style.transition = 'opacity .18s ease, transform .18s ease'; c.style.opacity = '0'; c.style.transform = 'scale(0.96)'; });
     await new Promise(r => setTimeout(r, 200));
   }
 
   showSkeletons();
   container.querySelectorAll('.card').forEach(c => c.remove());
-
-  // Reset selection & totals on every load
   selectedIndices.clear();
+  currentSort = { key: null, dir: 'asc' };
+  updateSortButtons();
   updateTotals();
 
   try {
@@ -312,6 +368,12 @@ async function loadMenu() {
   }
 }
 
+// ── Sort button events ────────────────────────────────────────────────────────
+
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', e => handleSortClick(btn, btn.dataset.key, e));
+});
+
 // ── Language toggle ───────────────────────────────────────────────────────────
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -320,7 +382,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     currentLang = btn.dataset.lang;
     localStorage.setItem('lang', currentLang);
     applyLang();
-    loadMenu(); // full re-fetch with translated dish names
+    loadMenu();
   });
 });
 
