@@ -12,8 +12,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/menu', async (req, res) => {
+  const lang = ['it', 'en'].includes(req.query.lang) ? req.query.lang : 'it';
   try {
-    const menu = await getMenu();
+    const menu = await getMenu(lang);
     res.json(menu);
   } catch (err) {
     if (err instanceof MenuUnavailableError) {
@@ -26,17 +27,16 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-// Pre-fetch silenzioso ogni mattina alle 08:00 (timezone Europe/Rome via TZ env var)
+// Pre-fetch both languages at 08:00
 cron.schedule('0 8 * * *', async () => {
-  console.log('[cron] Avvio fetch menu mattutino...');
+  console.log('[cron] Pre-fetch menu mattutino IT+EN...');
   try {
-    await getMenu();
-    console.log('[cron] Menu aggiornato con successo');
+    await getMenu('it');
+    await getMenu('en');
+    console.log('[cron] Menu aggiornati');
   } catch (err) {
-    console.error('[cron] Fetch fallito:', err.message);
+    console.error('[cron] Pre-fetch fallito:', err.message);
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server avviato su http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server avviato su http://localhost:${PORT}`));

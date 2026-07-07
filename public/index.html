@@ -11,7 +11,6 @@
 </head>
 <body>
 
-  <!-- Animated background blobs -->
   <div class="bg-blob blob-1"></div>
   <div class="bg-blob blob-2"></div>
   <div class="bg-blob blob-3"></div>
@@ -36,36 +35,56 @@
   </header>
 
   <main>
+    <!-- Top totals bar (slides down when dishes selected) -->
+    <div class="totals-wrap">
+      <div class="totals-bar totals-top" id="totals-top">
+        <div class="totals-inner">
+          <div class="totals-left">
+            <div class="count-badge" id="ttop-count">0</div>
+            <span class="count-label" id="ttop-label" data-i18n="piatti">piatti sel.</span>
+          </div>
+          <div class="totals-macros">
+            <div class="tval tval-cal">
+              <span class="tval-icon">🔥</span>
+              <span class="tval-n" id="ttop-cal">0</span>
+              <span class="tval-u" data-i18n="kcal">kcal</span>
+            </div>
+            <div class="tval tval-carb">
+              <span class="tval-icon">🌾</span>
+              <span class="tval-n" id="ttop-carb">0</span>
+              <span class="tval-u" data-i18n="gCarb">g carb</span>
+            </div>
+            <div class="tval tval-prot">
+              <span class="tval-icon">💪</span>
+              <span class="tval-n" id="ttop-prot">0</span>
+              <span class="tval-u" data-i18n="gProt">g prot</span>
+            </div>
+            <div class="tval tval-fat">
+              <span class="tval-icon">🫒</span>
+              <span class="tval-n" id="ttop-fat">0</span>
+              <span class="tval-u" data-i18n="gFat">g gras</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu cards -->
     <div class="container" id="menu-container">
       <div class="skeleton-card" id="sk1">
-        <div class="sk-header">
-          <div class="sk-line long"></div>
-          <div class="sk-badge"></div>
-        </div>
+        <div class="sk-header"><div class="sk-line long"></div><div class="sk-badge"></div></div>
         <div class="sk-bar"></div>
-        <div class="sk-grid">
-          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
-        </div>
+        <div class="sk-grid"><div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div></div>
       </div>
       <div class="skeleton-card" id="sk2">
-        <div class="sk-header">
-          <div class="sk-line medium"></div>
-          <div class="sk-badge"></div>
-        </div>
+        <div class="sk-header"><div class="sk-line medium"></div><div class="sk-badge"></div></div>
         <div class="sk-bar"></div>
-        <div class="sk-grid">
-          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
-        </div>
+        <div class="sk-grid"><div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div></div>
       </div>
       <div class="skeleton-card" id="sk3">
-        <div class="sk-header">
-          <div class="sk-line long"></div>
-          <div class="sk-badge"></div>
-        </div>
+        <div class="sk-header"><div class="sk-line long"></div><div class="sk-badge"></div></div>
         <div class="sk-bar"></div>
-        <div class="sk-grid">
-          <div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div>
-        </div>
+        <div class="sk-grid"><div class="sk-pill"></div><div class="sk-pill"></div><div class="sk-pill"></div></div>
       </div>
     </div>
 
@@ -76,6 +95,38 @@
       <button class="retry-btn" data-i18n="retryBtn" onclick="loadMenu()">Riprova</button>
     </div>
   </main>
+
+  <!-- Bottom totals bar (fixed) -->
+  <div class="totals-bar totals-bottom" id="totals-bottom">
+    <div class="totals-inner">
+      <div class="totals-left">
+        <div class="count-badge count-badge-inv" id="tbot-count">0</div>
+        <span class="count-label count-label-inv" id="tbot-label" data-i18n="piatti">piatti sel.</span>
+      </div>
+      <div class="totals-macros">
+        <div class="tval tval-cal-inv">
+          <span class="tval-icon">🔥</span>
+          <span class="tval-n" id="tbot-cal">0</span>
+          <span class="tval-u" data-i18n="kcal">kcal</span>
+        </div>
+        <div class="tval tval-carb-inv">
+          <span class="tval-icon">🌾</span>
+          <span class="tval-n" id="tbot-carb">0</span>
+          <span class="tval-u" data-i18n="gCarb">g carb</span>
+        </div>
+        <div class="tval tval-prot-inv">
+          <span class="tval-icon">💪</span>
+          <span class="tval-n" id="tbot-prot">0</span>
+          <span class="tval-u" data-i18n="gProt">g prot</span>
+        </div>
+        <div class="tval tval-fat-inv">
+          <span class="tval-icon">🫒</span>
+          <span class="tval-n" id="tbot-fat">0</span>
+          <span class="tval-u" data-i18n="gFat">g gras</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <p class="footer-line" data-i18n="footerText">Valori stimati da AI per porzioni standard da ristorazione.</p>
