@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu del Giorno – Mensa Angelini</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-icon">🥗</div>
+    <h1>Menu del Giorno</h1>
+    <div class="date" id="today-date"></div>
+  </header>
+
+  <main>
+    <div class="container" id="menu-container">
+      <!-- Skeleton loader (3 card di placeholder) -->
+      <div class="skeleton-card" id="sk1">
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line medium skeleton-bar"></div>
+      </div>
+      <div class="skeleton-card" id="sk2">
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line long skeleton-bar"></div>
+      </div>
+      <div class="skeleton-card" id="sk3">
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line short skeleton-bar"></div>
+      </div>
+    </div>
+
+    <!-- Error screen (nascosta di default) -->
+    <div class="error-screen" id="error-screen">
+      <div class="error-icon">🌿</div>
+      <h2>Menu non disponibile</h2>
+      <p>Impossibile recuperare il menu di oggi. Riprova tra qualche minuto.</p>
+      <button class="retry-btn" onclick="loadMenu()">Riprova</button>
+    </div>
+  </main>
+
+  <footer class="footer">
+    ⚠️ Valori nutrizionali stimati da AI per porzioni standard da ristorazione.<br>
+    Non sostituiscono una consulenza nutrizionale professionale.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
