@@ -14,6 +14,7 @@ const TRANSLATIONS = {
     fatIcon:    '🫒',
     piatto:     'piatto sel.',
     piatti:     'piatti sel.',
+    sortLabel:  'Ordina',
     sortCal:    'Calorie',
     sortCarb:   'Carb',
     sortProt:   'Prot',
@@ -39,6 +40,7 @@ const TRANSLATIONS = {
     fatIcon:    '🫒',
     piatto:     'dish sel.',
     piatti:     'dishes sel.',
+    sortLabel:  'Sort',
     sortCal:    'Calories',
     sortCarb:   'Carbs',
     sortProt:   'Prot',
@@ -54,7 +56,18 @@ const TRANSLATIONS = {
 let currentLang = localStorage.getItem('lang') || 'it';
 let currentMenu = [];
 let selectedIndices = new Set();
-let currentSort = { key: null, dir: 'asc' }; // key: API field name | null
+
+// sortKeys: array of max 2 entries [{key, dir}, ...]
+// sortKeys[0] = primary (labelled "1"), sortKeys[1] = secondary (labelled "2")
+let sortKeys = [];
+
+// key → card selector for highlighting
+const SORT_SELECTOR = {
+  calorie:       '.calorie-badge',
+  carboidrati_g: '.macro-item.carb',
+  proteine_g:    '.macro-item.prot',
+  grassi_g:      '.macro-item.fat',
+};
 
 function t(key) { return TRANSLATIONS[currentLang][key] ?? TRANSLATIONS.it[key] ?? key; }
 
@@ -148,46 +161,84 @@ function btnRipple(btn, e) {
 
 function getSortedOrder() {
   const indices = currentMenu.map((_, i) => i);
-  if (!currentSort.key) return indices;
+  if (sortKeys.length === 0) return indices;
   return indices.sort((a, b) => {
-    const va = Number(currentMenu[a][currentSort.key]) || 0;
-    const vb = Number(currentMenu[b][currentSort.key]) || 0;
-    return currentSort.dir === 'asc' ? va - vb : vb - va;
+    for (const { key, dir } of sortKeys) {
+      const va = Number(currentMenu[a][key]) || 0;
+      const vb = Number(currentMenu[b][key]) || 0;
+      const diff = dir === 'asc' ? va - vb : vb - va;
+      if (diff !== 0) return diff;
+    }
+    return 0;
   });
 }
 
 function updateSortButtons() {
   document.querySelectorAll('.sort-btn').forEach(btn => {
-    const isActive = btn.dataset.key === currentSort.key;
+    const key = btn.dataset.key;
+    const idx = sortKeys.findIndex(s => s.key === key);
+    const isActive = idx !== -1;
+
     btn.classList.toggle('active', isActive);
-    btn.dataset.dir = isActive ? currentSort.dir : '';
-    const arrow = btn.querySelector('.sort-arrow');
-    arrow.textContent = isActive ? (currentSort.dir === 'asc' ? '↑' : '↓') : '';
+
+    const priorityEl = btn.querySelector('.sort-priority');
+    const arrowEl    = btn.querySelector('.sort-arrow');
+
+    if (isActive) {
+      const { dir } = sortKeys[idx];
+      btn.dataset.dir       = dir;
+      priorityEl.textContent = String(idx + 1); // "1" or "2"
+      arrowEl.textContent    = dir === 'asc' ? '▲' : '▼';
+    } else {
+      btn.dataset.dir        = '';
+      priorityEl.textContent = '';
+      arrowEl.textContent    = '';
+    }
   });
+}
+
+function updateCardHighlights() {
+  // Remove all existing highlights
+  document.querySelectorAll('.calorie-badge.sort-hl, .macro-item.sort-hl')
+    .forEach(el => el.classList.remove('sort-hl'));
+
+  // Apply for each active sort key
+  sortKeys.forEach(({ key }) => {
+    const sel = SORT_SELECTOR[key];
+    if (sel) document.querySelectorAll(`.card ${sel}`).forEach(el => el.classList.add('sort-hl'));
+  });
+}
+
+function handleSortClick(btn, key, e) {
+  btnRipple(btn, e);
+  const existingIdx = sortKeys.findIndex(s => s.key === key);
+
+  if (existingIdx !== -1) {
+    // Cycle: asc → desc → remove
+    if (sortKeys[existingIdx].dir === 'asc') {
+      sortKeys[existingIdx].dir = 'desc';
+    } else {
+      sortKeys.splice(existingIdx, 1);
+    }
+  } else {
+    if (sortKeys.length >= 2) {
+      sortKeys[1] = { key, dir: 'asc' }; // replace secondary slot
+    } else {
+      sortKeys.push({ key, dir: 'asc' }); // add as next priority
+    }
+  }
+
+  updateSortButtons();
+  updateCardHighlights();
+  applySort();
 }
 
 async function applySort() {
   const container = document.getElementById('menu-container');
   const existing = [...container.querySelectorAll('.card')];
-
-  // Quick cross-fade
   existing.forEach(c => { c.style.transition = 'opacity .11s ease, transform .11s ease'; c.style.opacity = '0'; c.style.transform = 'scale(0.985)'; });
   await new Promise(r => setTimeout(r, 125));
-
   renderMenu(currentMenu, true);
-}
-
-function handleSortClick(btn, key, e) {
-  btnRipple(btn, e);
-  if (currentSort.key === key) {
-    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : null; // asc → desc → reset
-    if (currentSort.dir === null) { currentSort.key = null; currentSort.dir = 'asc'; }
-  } else {
-    currentSort.key = key;
-    currentSort.dir = 'asc';
-  }
-  updateSortButtons();
-  applySort();
 }
 
 // ── Selection & Totals ────────────────────────────────────────────────────────
@@ -286,7 +337,6 @@ function renderMenu(data, isSortChange = false) {
   order.forEach((originalIndex, displayIndex) => {
     const item = data[originalIndex];
     const { card, cal, carb, prot, fat } = renderCard(item, originalIndex);
-
     card.style.animationDelay = `${displayIndex * (isSortChange ? 38 : 88)}ms`;
 
     card.addEventListener('click', e => {
@@ -305,7 +355,6 @@ function renderMenu(data, isSortChange = false) {
 
     requestAnimationFrame(() => {
       if (isSortChange) {
-        // Fast entrance; set values immediately (no re-animation)
         card.querySelector('.cal-value').textContent = cal;
         const total = (carb + prot + fat) || 1;
         card.querySelector('.seg-carb').style.width = `${(carb/total*100).toFixed(1)}%`;
@@ -320,6 +369,9 @@ function renderMenu(data, isSortChange = false) {
       }
     });
   });
+
+  // Apply highlights after render (both initial and sort change)
+  requestAnimationFrame(() => updateCardHighlights());
 }
 
 // ── Skeleton / Error ──────────────────────────────────────────────────────────
@@ -335,9 +387,7 @@ function hideSkeletons() {
   document.getElementById('sort-bar').classList.add('visible');
 }
 
-function showError() {
-  document.getElementById('error-screen').classList.add('visible');
-}
+function showError() { document.getElementById('error-screen').classList.add('visible'); }
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
@@ -352,7 +402,7 @@ async function loadMenu() {
   showSkeletons();
   container.querySelectorAll('.card').forEach(c => c.remove());
   selectedIndices.clear();
-  currentSort = { key: null, dir: 'asc' };
+  sortKeys = [];
   updateSortButtons();
   updateTotals();
 
@@ -368,13 +418,11 @@ async function loadMenu() {
   }
 }
 
-// ── Sort button events ────────────────────────────────────────────────────────
+// ── Event listeners ───────────────────────────────────────────────────────────
 
 document.querySelectorAll('.sort-btn').forEach(btn => {
   btn.addEventListener('click', e => handleSortClick(btn, btn.dataset.key, e));
 });
-
-// ── Language toggle ───────────────────────────────────────────────────────────
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {

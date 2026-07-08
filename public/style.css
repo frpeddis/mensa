@@ -98,12 +98,13 @@ main { position:relative; z-index:1; }
 
 .sort-bar {
   display:flex;
-  gap:8px;
+  flex-direction:column;
   background:#fff;
   border-radius:var(--radius-xl);
-  padding:12px 14px;
+  padding:12px 14px 12px;
   box-shadow:var(--shadow-card);
-  border:1.5px solid var(--primary-xlight);
+  border:2px solid var(--primary-light);
+  border-left:4px solid var(--primary);
   margin-top:16px;
   opacity:0;
   transform:translateY(-10px) scale(.98);
@@ -115,6 +116,14 @@ main { position:relative; z-index:1; }
   transform:translateY(0) scale(1);
   pointer-events:all;
 }
+
+/* Title row */
+.sort-header { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+.sort-title  { font-size:.65rem; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:var(--primary); }
+.sort-title-sep { flex:1; height:1px; background:var(--primary-xlight); }
+
+/* Buttons row */
+.sort-buttons { display:flex; gap:8px; }
 
 .sort-btn {
   flex:1;
@@ -144,18 +153,45 @@ main { position:relative; z-index:1; }
 }
 .sort-btn.active:active { transform:scale(.95); }
 
-.sort-icon  { font-size:1.15rem; line-height:1; transition:transform .2s; }
-.sort-btn.active .sort-icon { transform:scale(1.1); }
-.sort-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); transition:color .22s; }
-.sort-arrow { font-size:.78rem; font-weight:900; color:var(--text-light); min-height:.85rem; line-height:1; transition:color .22s, transform .22s; }
+/* Priority badge (1 / 2) */
+.sort-priority {
+  position:absolute;
+  top:4px; right:5px;
+  width:15px; height:15px;
+  border-radius:50%;
+  background:rgba(255,255,255,.28);
+  color:#fff;
+  font-size:.58rem;
+  font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0;
+  transform:scale(0.4);
+  transition:opacity .2s, transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+}
+.sort-btn.active .sort-priority { opacity:1; transform:scale(1); }
 
-.sort-btn.active .sort-label { color:#fff; }
-.sort-btn.active .sort-arrow { color:rgba(255,255,255,.9); }
-.sort-btn.active[data-dir="asc"]  .sort-arrow { transform:translateY(0); }
-.sort-btn.active[data-dir="desc"] .sort-arrow { transform:translateY(1px); }
+.sort-icon  { font-size:1.1rem; line-height:1; transition:transform .2s; }
+.sort-btn.active .sort-icon { transform:scale(1.08); }
+.sort-label { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); transition:color .22s; }
+.sort-arrow { font-size:.82rem; line-height:1; color:var(--text-light); min-height:.9rem; transition:color .22s; }
+
+.sort-btn.active .sort-label,
+.sort-btn.active .sort-arrow { color:rgba(255,255,255,.95); }
 
 /* Ripple on sort btn */
 .sort-btn .btn-ripple { position:absolute; width:0; height:0; border-radius:50%; background:rgba(255,255,255,.35); transform:translate(-50%,-50%); pointer-events:none; animation:rippleExpand .5s ease-out forwards; }
+
+/* ── Sort highlight on card elements ── */
+.calorie-badge.sort-hl {
+  border-color:var(--primary) !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.18), var(--shadow-badge);
+}
+.macro-item.sort-hl {
+  border-color:var(--primary) !important;
+  border-width:2px !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
 
 .totals-bar { overflow:hidden; }
 

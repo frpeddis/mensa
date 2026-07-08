@@ -36,29 +36,39 @@
 
   <main>
 
-    <!-- Sort bar (slides in after menu loads) -->
+    <!-- Sort bar -->
     <div class="sort-wrap">
       <div class="sort-bar" id="sort-bar">
-        <button class="sort-btn" data-key="calorie">
-          <span class="sort-icon">🔥</span>
-          <span class="sort-label" data-i18n="sortCal">Calorie</span>
-          <span class="sort-arrow"></span>
-        </button>
-        <button class="sort-btn" data-key="carboidrati_g">
-          <span class="sort-icon">🌾</span>
-          <span class="sort-label" data-i18n="sortCarb">Carb</span>
-          <span class="sort-arrow"></span>
-        </button>
-        <button class="sort-btn" data-key="proteine_g">
-          <span class="sort-icon">💪</span>
-          <span class="sort-label" data-i18n="sortProt">Prot</span>
-          <span class="sort-arrow"></span>
-        </button>
-        <button class="sort-btn" data-key="grassi_g">
-          <span class="sort-icon">🫒</span>
-          <span class="sort-label" data-i18n="sortFat">Grassi</span>
-          <span class="sort-arrow"></span>
-        </button>
+        <div class="sort-header">
+          <span class="sort-title" data-i18n="sortLabel">Ordina</span>
+          <div class="sort-title-sep"></div>
+        </div>
+        <div class="sort-buttons">
+          <button class="sort-btn" data-key="calorie">
+            <span class="sort-priority"></span>
+            <span class="sort-icon">🔥</span>
+            <span class="sort-label" data-i18n="sortCal">Calorie</span>
+            <span class="sort-arrow"></span>
+          </button>
+          <button class="sort-btn" data-key="carboidrati_g">
+            <span class="sort-priority"></span>
+            <span class="sort-icon">🌾</span>
+            <span class="sort-label" data-i18n="sortCarb">Carb</span>
+            <span class="sort-arrow"></span>
+          </button>
+          <button class="sort-btn" data-key="proteine_g">
+            <span class="sort-priority"></span>
+            <span class="sort-icon">💪</span>
+            <span class="sort-label" data-i18n="sortProt">Prot</span>
+            <span class="sort-arrow"></span>
+          </button>
+          <button class="sort-btn" data-key="grassi_g">
+            <span class="sort-priority"></span>
+            <span class="sort-icon">🫒</span>
+            <span class="sort-label" data-i18n="sortFat">Grassi</span>
+            <span class="sort-arrow"></span>
+          </button>
+        </div>
       </div>
     </div>
 
