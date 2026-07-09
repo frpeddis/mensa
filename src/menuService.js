@@ -19,19 +19,23 @@ export async function getMenu(lang = 'it') {
       // Reuse Italian data to avoid re-scraping; only translate dish names
       let itData = await getTodayCache('it');
       if (!itData) {
-        const dishes = await fetchMenu();
-        itData = await getNutrition(dishes, 'it');
+        const dishData = await fetchMenu();
+        const names = dishData.map(d => d.nome);
+        const nutrition = await getNutrition(names, 'it');
+        itData = nutrition.map((item, i) => ({ ...item, categoria: dishData[i]?.categoria || 'altro' }));
         await saveTodayCache(itData, 'it');
       }
-      const translated = await translateDishes(itData);
+      const translated = await translateDishes(itData); // spreads ...item, preserves categoria
       await saveTodayCache(translated, lang);
       return translated;
     }
 
-    const dishes = await fetchMenu();
-    const nutrition = await getNutrition(dishes, 'it');
-    await saveTodayCache(nutrition, 'it');
-    return nutrition;
+    const dishData = await fetchMenu();
+    const names = dishData.map(d => d.nome);
+    const nutrition = await getNutrition(names, 'it');
+    const result = nutrition.map((item, i) => ({ ...item, categoria: dishData[i]?.categoria || 'altro' }));
+    await saveTodayCache(result, 'it');
+    return result;
   } catch (err) {
     throw new MenuUnavailableError(err);
   }

@@ -360,6 +360,34 @@ main { position:relative; z-index:1; }
 .retry-btn:hover  { transform:translateY(-2px); box-shadow:0 7px 26px rgba(37,99,235,.46); }
 .retry-btn:active { transform:scale(.97); }
 
+/* ── Category card colors ── */
+.card.cat-primi   { background:#FFFDE7; border-color:#FDE68A; }
+.card.cat-secondi { background:#FFF0F3; border-color:#FBCFE8; }
+.card.cat-contorni{ background:#F0FDF4; border-color:#BBF7D0; }
+
+.card.cat-primi::before   { background:linear-gradient(180deg,#FBBF24,#F59E0B); opacity:.75; }
+.card.cat-secondi::before { background:linear-gradient(180deg,#F472B6,#EC4899); opacity:.75; }
+.card.cat-contorni::before{ background:linear-gradient(180deg,#4ADE80,#22C55E); opacity:.75; }
+
+/* Category chip */
+.cat-chip {
+  display:inline-block;
+  font-size:.54rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+  padding:3px 9px; border-radius:10px; margin-bottom:10px; margin-left:10px;
+}
+.card.cat-primi   .cat-chip { background:#FEF08A; color:#92400E; border:1px solid #FDE047; }
+.card.cat-secondi .cat-chip { background:#FBCFE8; color:#9D174D; border:1px solid #F9A8D4; }
+.card.cat-contorni .cat-chip { background:#BBF7D0; color:#065F46; border:1px solid #86EFAC; }
+
+/* Selected state always overrides category background (higher specificity wins) */
+.card.selected.cat-primi,
+.card.selected.cat-secondi,
+.card.selected.cat-contorni {
+  background:linear-gradient(180deg,#F5F9FF,#FFFFFF);
+  border-color:var(--primary);
+  border-width:2px;
+}
+
 /* ── Footer ── */
 .footer      { position:relative; z-index:1; text-align:center; padding:4px 20px 28px; }
 .footer-line { font-size:.74rem; color:var(--text-light); line-height:1.65; }

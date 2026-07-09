@@ -3,13 +3,12 @@ import * as cheerio from 'cheerio';
 
 const MENU_URL = 'https://menuangelini.ear-srl.com/';
 
-// Dishes are shown as "NOME ITALIANO / English name" or "IT1 / IT2 - EN1 / EN2".
+// Dishes appear as "NOME ITALIANO / English name" or "IT1 / IT2 - EN1 / EN2".
 // Extracts and title-cases the Italian portion only.
 function extractItalianName(fullText) {
   let italianBlock;
 
   if (fullText.includes(' - ')) {
-    // " - " separates the Italian block from the English block
     italianBlock = fullText.split(' - ')[0];
   } else {
     const parts = fullText.split(' / ');
@@ -19,10 +18,8 @@ function extractItalianName(fullText) {
     });
 
     if (allCapsParts.length < parts.length) {
-      // Some parts are mixed-case (English) — keep only all-caps (Italian)
       italianBlock = allCapsParts.join(' / ');
     } else {
-      // Everything is all-caps — take the first half (IT options before EN options)
       italianBlock = parts.slice(0, Math.ceil(parts.length / 2)).join(' / ');
     }
   }
@@ -31,6 +28,14 @@ function extractItalianName(fullText) {
     .trim()
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function normalizeCategory(text) {
+  const t = text.toLowerCase().trim();
+  if (t === 'primi') return 'primi';
+  if (t === 'secondi') return 'secondi';
+  if (t.includes('contorn')) return 'contorni';
+  return null;
 }
 
 export async function fetchMenu() {
@@ -42,16 +47,33 @@ export async function fetchMenu() {
   const $ = cheerio.load(response.data);
   const dishes = [];
 
-  $('span.piatto-nome').each((_, el) => {
-    const fullText = $(el).text().trim();
-    if (fullText.length > 3) {
-      dishes.push(extractItalianName(fullText));
-    }
+  // Each section header (.bg-success-subtle) is immediately followed by a div
+  // containing the ul.list-group of dishes for that course.
+  $('.bg-success-subtle').each((_, sectionEl) => {
+    const categoria = normalizeCategory($(sectionEl).text().trim());
+    if (!categoria) return;
+
+    $(sectionEl).next('div').find('span.piatto-nome').each((_, el) => {
+      const fullText = $(el).text().trim();
+      if (fullText.length > 3) {
+        dishes.push({ nome: extractItalianName(fullText), categoria });
+      }
+    });
   });
+
+  // Fallback: scrape all piatto-nome without category info
+  if (dishes.length === 0) {
+    $('span.piatto-nome').each((_, el) => {
+      const fullText = $(el).text().trim();
+      if (fullText.length > 3) {
+        dishes.push({ nome: extractItalianName(fullText), categoria: 'altro' });
+      }
+    });
+  }
 
   if (dishes.length === 0) {
     throw new Error('Nessun piatto trovato nella pagina del menu');
   }
 
-  return [...new Set(dishes)];
+  return dishes;
 }

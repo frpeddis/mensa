@@ -57,6 +57,14 @@ let currentLang = localStorage.getItem('lang') || 'it';
 let currentMenu = [];
 let selectedIndices = new Set();
 
+const CAT_LABELS = {
+  it: { primi: 'Primo', secondi: 'Secondo', contorni: 'Contorno' },
+  en: { primi: 'Starter', secondi: 'Main',   contorni: 'Side'    },
+};
+function getCatLabel(categoria) {
+  return (CAT_LABELS[currentLang] || CAT_LABELS.it)[categoria] || '';
+}
+
 // sortKeys: array of max 2 entries [{key, dir}, ...]
 // sortKeys[0] = primary (labelled "1"), sortKeys[1] = secondary (labelled "2")
 let sortKeys = [];
@@ -288,12 +296,19 @@ function renderCard(item, originalIndex) {
 
   const card = document.createElement('div');
   card.className = 'card';
+  if (item.categoria) card.classList.add(`cat-${item.categoria}`);
   if (selectedIndices.has(originalIndex)) card.classList.add('selected');
+
+  const catLabel = getCatLabel(item.categoria);
+  const catChipHtml = catLabel
+    ? `<span class="cat-chip">${escapeHtml(catLabel)}</span>`
+    : '';
 
   card.innerHTML = `
     <div class="card-check">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
+    ${catChipHtml}
     <div class="card-header">
       <span class="dish-name">${escapeHtml(item.piatto)}</span>
       <div class="calorie-badge">
