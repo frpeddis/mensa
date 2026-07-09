@@ -9,9 +9,6 @@ const TRANSLATIONS = {
     carbShort:  'Carb',
     protShort:  'Prot',
     fatShort:   'Grassi',
-    carbIcon:   '🌾',
-    protIcon:   '💪',
-    fatIcon:    '🫒',
     piatto:     'piatto sel.',
     piatti:     'piatti sel.',
     sortLabel:  'Ordina',
@@ -24,6 +21,19 @@ const TRANSLATIONS = {
     retryBtn:   'Riprova',
     footerText: 'Valori stimati da AI per porzioni standard da ristorazione.',
     footerSub:  'Non sostituiscono una consulenza nutrizionale professionale.',
+    setupTitle:         'Impostazioni',
+    setupCode:          'Codice dipendente',
+    setupCodePlaceholder:'Es. ANG-0123',
+    setupGenQr:         'Genera QR Code',
+    setupOr:            'oppure',
+    setupUploadQr:      'Carica immagine QR Code',
+    setupUploadCta:     'Carica immagine',
+    setupPreview:       'Anteprima QR Code',
+    setupSave:          'Salva',
+    setupNoQr:          'Nessun QR configurato.\nVai su Impostazioni per aggiungerlo.',
+    orderTitle:         'Il tuo ordine',
+    orderDishes:        'Piatti selezionati',
+    showOrder:          'Ordine',
   },
   en: {
     appTitle:   "Today's Menu",
@@ -35,9 +45,6 @@ const TRANSLATIONS = {
     carbShort:  'Carbs',
     protShort:  'Prot',
     fatShort:   'Fat',
-    carbIcon:   '🌾',
-    protIcon:   '💪',
-    fatIcon:    '🫒',
     piatto:     'dish sel.',
     piatti:     'dishes sel.',
     sortLabel:  'Sort',
@@ -50,6 +57,19 @@ const TRANSLATIONS = {
     retryBtn:   'Try again',
     footerText: 'Nutritional values estimated by AI for standard restaurant portions.',
     footerSub:  'Not a substitute for professional nutritional advice.',
+    setupTitle:         'Settings',
+    setupCode:          'Employee code',
+    setupCodePlaceholder:'e.g. ANG-0123',
+    setupGenQr:         'Generate QR Code',
+    setupOr:            'or',
+    setupUploadQr:      'Upload QR image',
+    setupUploadCta:     'Upload image',
+    setupPreview:       'QR Code preview',
+    setupSave:          'Save',
+    setupNoQr:          'No QR configured.\nGo to Settings to add one.',
+    orderTitle:         'Your order',
+    orderDishes:        'Selected dishes',
+    showOrder:          'Order',
   },
 };
 
@@ -86,6 +106,10 @@ function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const val = TRANSLATIONS[currentLang][el.dataset.i18n];
     if (val !== undefined) el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const val = TRANSLATIONS[currentLang][el.dataset.i18nPlaceholder];
+    if (val !== undefined) el.placeholder = val;
   });
   updateDate();
   document.querySelectorAll('.lang-btn').forEach(btn =>
@@ -312,7 +336,6 @@ function renderCard(item, originalIndex) {
     <div class="card-header">
       <span class="dish-name">${escapeHtml(item.piatto)}</span>
       <div class="calorie-badge">
-        <span class="cal-icon">🔥</span>
         <span class="cal-value">0</span>
         <span class="cal-unit">${t('kcal')}</span>
       </div>
@@ -324,17 +347,14 @@ function renderCard(item, originalIndex) {
     </div>
     <div class="macro-grid">
       <div class="macro-item carb">
-        <span class="macro-icon">${t('carbIcon')}</span>
         <span class="macro-value">${carb}g</span>
         <span class="macro-label">${t('carbShort')}</span>
       </div>
       <div class="macro-item prot">
-        <span class="macro-icon">${t('protIcon')}</span>
         <span class="macro-value">${prot}g</span>
         <span class="macro-label">${t('protShort')}</span>
       </div>
       <div class="macro-item fat">
-        <span class="macro-icon">${t('fatIcon')}</span>
         <span class="macro-value">${fat}g</span>
         <span class="macro-label">${t('fatShort')}</span>
       </div>
@@ -448,6 +468,156 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     loadMenu();
   });
 });
+
+// ── Setup panel ───────────────────────────────────────────────────────────────
+
+const PROFILE_KEY = 'mensa-profile';
+
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveProfile(data) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+}
+
+let profile = loadProfile();
+let pendingQrDataUrl = null; // temp state inside setup panel
+
+function renderQrInto(container, size = 200) {
+  container.innerHTML = '';
+  if (profile.qrMode === 'image' && profile.qrDataUrl) {
+    const img = document.createElement('img');
+    img.src = profile.qrDataUrl;
+    img.alt = 'QR Code';
+    container.appendChild(img);
+  } else if (profile.code && window.QRCode) {
+    new window.QRCode(container, {
+      text: profile.code, width: size, height: size,
+      colorDark: '#1E3A5F', colorLight: '#ffffff',
+      correctLevel: window.QRCode.CorrectLevel.M,
+    });
+  } else {
+    container.innerHTML = `<p class="order-qr-placeholder">${escapeHtml(t('setupNoQr').replace(/\n/g, '<br>'))}</p>`;
+  }
+}
+
+function refreshSetupPreview() {
+  const wrap = document.getElementById('qr-preview-wrap');
+  const box  = document.getElementById('qr-preview-box');
+  box.innerHTML = '';
+
+  if (pendingQrDataUrl) {
+    wrap.classList.add('visible');
+    const img = document.createElement('img');
+    img.src = pendingQrDataUrl;
+    img.alt = 'QR preview';
+    box.appendChild(img);
+  } else {
+    const code = document.getElementById('employee-code').value.trim();
+    if (code && window.QRCode) {
+      wrap.classList.add('visible');
+      new window.QRCode(box, {
+        text: code, width: 176, height: 176,
+        colorDark: '#1E3A5F', colorLight: '#ffffff',
+        correctLevel: window.QRCode.CorrectLevel.M,
+      });
+    } else {
+      wrap.classList.remove('visible');
+    }
+  }
+}
+
+function openSetup() {
+  document.getElementById('employee-code').value = profile.code || '';
+  pendingQrDataUrl = profile.qrMode === 'image' ? (profile.qrDataUrl || null) : null;
+  refreshSetupPreview();
+  document.getElementById('setup-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSetup() {
+  document.getElementById('setup-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('setup-open').addEventListener('click', openSetup);
+document.getElementById('setup-close').addEventListener('click', closeSetup);
+document.getElementById('setup-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('setup-overlay')) closeSetup();
+});
+
+document.getElementById('gen-qr-btn').addEventListener('click', () => {
+  pendingQrDataUrl = null;
+  refreshSetupPreview();
+});
+
+document.getElementById('qr-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { pendingQrDataUrl = ev.target.result; refreshSetupPreview(); };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('setup-save').addEventListener('click', () => {
+  const code = document.getElementById('employee-code').value.trim();
+  profile = {
+    code,
+    qrMode: pendingQrDataUrl ? 'image' : 'code',
+    qrDataUrl: pendingQrDataUrl || null,
+  };
+  saveProfile(profile);
+  closeSetup();
+});
+
+// ── Order panel ───────────────────────────────────────────────────────────────
+
+function openOrder() {
+  // QR code
+  renderQrInto(document.getElementById('order-qr-wrap'), 220);
+
+  // Employee label
+  const empEl = document.getElementById('order-employee');
+  empEl.textContent = profile.code || '';
+
+  // Dish list + totals
+  const listEl = document.getElementById('order-dish-list');
+  listEl.innerHTML = '';
+  let totCal = 0, totCarb = 0, totProt = 0, totFat = 0;
+
+  selectedIndices.forEach(i => {
+    const item = currentMenu[i];
+    if (!item) return;
+    const cal  = safeNum(item.calorie);
+    const carb = safeNum(item.carboidrati_g);
+    const prot = safeNum(item.proteine_g);
+    const fat  = safeNum(item.grassi_g);
+    totCal += cal; totCarb += carb; totProt += prot; totFat += fat;
+
+    const li = document.createElement('li');
+    li.className = `order-dish-item${item.categoria ? ` cat-${item.categoria}` : ''}`;
+    li.innerHTML = `<span class="order-dish-name">${escapeHtml(item.piatto)}</span><span class="order-dish-cal">${cal} kcal</span>`;
+    listEl.appendChild(li);
+  });
+
+  document.getElementById('ord-cal').textContent  = totCal;
+  document.getElementById('ord-carb').textContent = totCarb;
+  document.getElementById('ord-prot').textContent = totProt;
+  document.getElementById('ord-fat').textContent  = totFat;
+
+  document.getElementById('order-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOrder() {
+  document.getElementById('order-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('order-open').addEventListener('click', openOrder);
+document.getElementById('order-close').addEventListener('click', closeOrder);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
